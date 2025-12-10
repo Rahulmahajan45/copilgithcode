@@ -1,0 +1,74 @@
+# Demonstration workflow: matrix strategy across OS and Node versions
+# Triggers: push, pull_request, and manual dispatch
+# This job shows:
+# - strategy.matrix with multiple axes (os, node)
+# - fail-fast: false so all combinations run even if one fails
+# - conditional steps that use matrix values
+# - how to print matrix context for debugging
+name: Matrix Demo
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-matrix:
+    name: Test on ${{ matrix.os }} / Node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [14, 16, 18]
+        # You can also add custom combined entries with "include"
+        include:
+          - os: ubuntu-latest
+            node: 18
+            extra: "special-case"
+      # Optional: limit parallelism if you have runner constraints
+      max-parallel: 6
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show matrix context
+        run: |
+          echo "Matrix.os = ${{ matrix.os }}"
+          echo "Matrix.node = ${{ matrix.node }}"
+          echo "Matrix.extra = ${{ matrix.extra || 'none' }}"
+
+      - name: Set up Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+        working-directory: .
+
+      - name: Run tests
+        run: |
+          npm test
+        env:
+          CI: true
+
+      # Example: a step that runs only on macOS
+      - name: macOS-only step
+        if: matrix.os == 'macos-latest'
+        run: |
+          echo "Running a macOS-specific command"
+
+      # Example: step that runs only for the "special-case" include
+      - name: Special-case step
+        if: matrix.extra == 'special-case'
+        run: |
+          echo "This only runs for the included special-case (ubuntu + node 18)"
+
+      # Upload logs/artifacts per matrix run (optional)
+      - name
