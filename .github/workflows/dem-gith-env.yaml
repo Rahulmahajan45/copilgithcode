@@ -1,0 +1,88 @@
+# Demo workflow showing how to write to and read from GITHUB_ENV across steps and runners
+# Triggers: manual (workflow_dispatch) and push to main
+name: GITHUB_ENV demo
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  ubuntu-demo:
+    name: Ubuntu (bash) demo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show that variable is not present yet
+        run: |
+          echo "GREETING before set: '${GREETING:-<unset>}'"
+          echo "MULTILINE before set:"
+          printf '%s\n' "${MULTILINE:-<unset>}"
+
+      - name: Set environment variables using GITHUB_ENV (bash)
+        run: |
+          # Single-line value
+          printf '%s\n' "GREETING=hello from GITHUB_ENV" >> "$GITHUB_ENV"
+
+          # Multi-line value (GitHub Actions environment file "heredoc" style)
+          # The delimiter EOF can be any token; it ends when the same token is written again.
+          echo "MULTILINE<<EOF" >> "$GITHUB_ENV"
+          echo "line 1 of multiline value" >> "$GITHUB_ENV"
+          echo "line 2 of multiline value" >> "$GITHUB_ENV"
+          echo "EOF" >> "$GITHUB_ENV"
+
+          # Note: Variables written to $GITHUB_ENV become available to subsequent steps,
+          # not to commands later in this same step unless you source the file.
+          echo "WROTE to GITHUB_ENV:"
+          tail -n +1 "$GITHUB_ENV" | sed -n '1,40p' || true
+        shell: bash
+
+      - name: Show that variables set above are NOT available earlier in the same step
+        run: |
+          # This demonstrates that variables written to $GITHUB_ENV do NOT appear in the
+          # current process's environment immediately (they will be available in the next step).
+          echo "GREETING in same step (should be empty): '${GREETING:-<unset>}'"
+        shell: bash
+
+      - name: Read variables set via GITHUB_ENV (next step)
+        run: |
+          echo "GREETING from GITHUB_ENV: '$GREETING'"
+          echo "MULTILINE from GITHUB_ENV:"
+          printf '%s\n' "$MULTILINE"
+        shell: bash
+
+  windows-demo:
+    name: Windows (PowerShell) demo
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show not set yet (PowerShell)
+        run: |
+          Write-Output "WIN_VAR before set: '$env:WIN_VAR'"
+        shell: pwsh
+
+      - name: Set GITHUB_ENV variables (PowerShell)
+        run: |
+          # Add single-line variable
+          Add-Content -Path $env:GITHUB_ENV -Value "WIN_VAR=hello from GITHUB_ENV (Windows)"
+
+          # Add multi-line using heredoc delimiter (same approach works)
+          Add-Content -Path $env:GITHUB_ENV -Value "WIN_MULTILINE<<EOF"
+          Add-Content -Path $env:GITHUB_ENV -Value "windows line 1"
+          Add-Content -Path $env:GITHUB_ENV -Value "windows line 2"
+          Add-Content -Path $env:GITHUB_ENV -Value "EOF"
+
+          # Show current content of the env file for debugging
+          Get-Content -Path $env:GITHUB_ENV | Select-Object -First 50
+        shell: pwsh
+
+      - name: Read variables in subsequent step (PowerShell)
+        run: |
+          Write-Output "WIN_VAR from GITHUB_ENV: $env:WIN_VAR"
+          Write-Output "WIN_MULTILINE from GITHUB_ENV:"
+          Write-Output $env:WIN_MULTILINE
+        shell: pwsh
