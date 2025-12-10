@@ -1,0 +1,23 @@
+name: Palindrome Check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check-palindrome:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Run palindrome check (example)
+        run: |
+          # Example: this should print "Palindrome"
+          python3 scripts/check_palindrome.py "A man, a plan, a canal: Panama"
