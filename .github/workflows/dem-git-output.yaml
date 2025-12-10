@@ -1,0 +1,92 @@
+# Demo: how to set step outputs using GITHUB_OUTPUT and consume them in later steps and jobs
+# Triggers: manual and push to main
+name: GITHUB_OUTPUT demo
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  set-outputs:
+    name: Set step outputs (creates step outputs via $GITHUB_OUTPUT)
+    runs-on: ubuntu-latest
+    # Expose some of the step outputs as job outputs so other jobs can consume them
+    outputs:
+      greeting: ${{ steps.set-single.outputs.greeting }}
+      multiline: ${{ steps.set-multiline.outputs.multiline }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set single-line output (bash)
+        id: set-single
+        run: |
+          # Single-line output: "name=value"
+          echo "greeting=hello from GITHUB_OUTPUT" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Read single-line output (in a later step)
+        run: |
+          echo "Greeting from step output: ${{ steps.set-single.outputs.greeting }}"
+
+      - name: Demonstrate that output is NOT available inside the same step that wrote it
+        id: same-step-check
+        run: |
+          # Write an output, then attempt to read it from the same step's environment.
+          # This will NOT show the output via steps.same-step-check.outputs.myvar because
+          # outputs become available to subsequent steps only.
+          echo "myvar=temporary" >> "$GITHUB_OUTPUT"
+          echo "Trying to read in same step (will be empty using step outputs):"
+          echo "steps.same-step-check.outputs.myvar = '${{ steps.same-step-check.outputs.myvar }}'"
+          echo "But you can still access the env file directly in the same step if needed:"
+          echo "Contents of GITHUB_OUTPUT file:"
+          tail -n +1 "$GITHUB_OUTPUT" || true
+        shell: bash
+
+      - name: Set multi-line output (bash)
+        id: set-multiline
+        run: |
+          # For multi-line values use the "heredoc" style:
+          echo "multiline<<EOF" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "line 1 of multiline" "line 2 of multiline" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Read multi-line output
+        run: |
+          echo "Multiline output (preserves newlines):"
+          echo "${{ steps.set-multiline.outputs.multiline }}"
+        shell: bash
+
+      - name: Set an output from PowerShell (Windows style)
+        id: set-pwsh
+        shell: pwsh
+        run: |
+          # On Windows/PowerShell use $env:GITHUB_OUTPUT
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "pwsh_greet=hello from PowerShell"
+          # Multi-line in PowerShell:
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "pwsh_multi<<EOF"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "pwsh line 1"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "pwsh line 2"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "EOF"
+
+      - name: Read PowerShell-set outputs (bash step can read them)
+        run: |
+          echo "pwsh_greet = ${{ steps.set-pwsh.outputs.pwsh_greet }}"
+          echo "pwsh_multi ="
+          echo "${{ steps.set-pwsh.outputs.pwsh_multi }}"
+        shell: bash
+
+  consume-outputs:
+    name: Consume job outputs
+    needs: set-outputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show outputs from previous job
+        run: |
+          echo "Greeting (from needs): ${{ needs.set-outputs.outputs.greeting }}"
+          echo "Multiline (from needs):"
+          echo "${{ needs.set-outputs.outputs.multiline }}"
+          echo "PowerShell greeting (via step->job mapping not set here, but step outputs are available inside the job that created them)"
+        shell: bash
