@@ -46,4 +46,4 @@ jobs:
           PY
 
       - name: Print sum
-        run: echo "Calculated sum: ${{ steps.calc.outputs.sum }}"
+        run: echo "Calculated sum:${{ steps.calc.outputs.sum }}"
