@@ -26,4 +26,6 @@ jobs:
 
       - name: Run concat script
         run: |
+          pwd
+          ls -ltr 
           python3 scripts/concat.py "${{ github.event.inputs.string1 }}" "${{ github.event.inputs.string2 }}"
