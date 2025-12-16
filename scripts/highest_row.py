@@ -6,7 +6,7 @@ Usage: python scripts/highest_row.py
 import sys
 from pathlib import Path
 
-SCORE_PATH = Path("scripts/score")
+SCORE_PATH = Path("scripts/score.csv")
 
 def parse_row_to_floats(row):
     vals = []
