@@ -24,4 +24,6 @@ with csv_path.open(newline='', encoding='utf-8') as f:
         col2 = row[1].strip() if len(row) >= 2 else ''
         col3 = row[2].strip() if len(row) >= 3 else ''
 
-        print(f"My name is {col1} , salary {col2} , city {col3}")
+       print(f" {col1}") 
+       print(f" {col2}") 
+       print(f"My name is {col1} , salary {col2} , city {col3}")
