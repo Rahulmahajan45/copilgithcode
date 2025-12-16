@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Print a specific row (1-based) from scripts/score.
+Print a specific row (1-based) from scripts/score.csv.
 Usage: python scripts/print_row.py --row 2
 """
 import argparse
 import sys
 from pathlib import Path
 
-SCORE_PATH = Path("scripts/score")
+SCORE_PATH = Path("scripts/score.csv")
 
 def read_rows(path=SCORE_PATH):
     if not path.exists():
