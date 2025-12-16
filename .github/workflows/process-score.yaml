@@ -1,0 +1,23 @@
+name: Process score CSV
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/score.csv'
+      - '.github/workflows/process-score.yml'
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Run CSV processing script
+        run: python3 scripts/process_scores.py
