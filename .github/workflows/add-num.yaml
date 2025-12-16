@@ -1,0 +1,49 @@
+name: Add two numbers
+on:
+  workflow_dispatch:
+    inputs:
+      num1:
+        description: 'First number'
+        required: true
+        type: number
+        default: 0
+      num2:
+        description: 'Second number'
+        required: true
+        type: number
+        default: 0
+
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    outputs:
+      sum: ${{ steps.calc.outputs.sum }}
+    steps:
+      - name: Calculate sum with Python
+        id: calc
+        env:
+          NUM1: ${{ github.event.inputs.num1 }}
+          NUM2: ${{ github.event.inputs.num2 }}
+        run: |
+          python - <<'PY'
+          import os, sys
+          try:
+              a = float(os.environ.get('NUM1','0'))
+              b = float(os.environ.get('NUM2','0'))
+              s = a + b
+              # If both inputs are integers, show integer result
+              if a.is_integer() and b.is_integer():
+                  s_out = str(int(s))
+              else:
+                  s_out = str(s)
+          except Exception as e:
+              print('Error:', e, file=sys.stderr)
+              sys.exit(1)
+          print(f'Sum: {s_out}')
+          # Write output for GitHub Actions
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+              fh.write(f'sum={s_out}\n')
+          PY
+
+      - name: Print sum
+        run: echo "Calculated sum: ${{ steps.calc.outputs.sum }}"
