@@ -1,0 +1,35 @@
+name: Score Utilities
+
+on:
+  workflow_dispatch:
+    inputs:
+      row_number:
+        description: 'Row number to print (1-based)'
+        required: true
+        default: '1'
+      column_number:
+        description: 'Column number to print (1-based)'
+        required: true
+        default: '1'
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Print requested row
+        run: python scripts/print_row.py --row "${{ github.event.inputs.row_number }}"
+
+      - name: Print row with highest score
+        run: python scripts/highest_row.py
+
+      - name: Print requested column
+        run: python scripts/print_column.py --col "${{ github.event.inputs.column_number }}"
