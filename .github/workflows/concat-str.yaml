@@ -1,0 +1,29 @@
+name: Concat Strings
+
+on:
+  workflow_dispatch:
+    inputs:
+      string1:
+        description: 'First string'
+        required: true
+        default: 'Hello'
+      string2:
+        description: 'Second string'
+        required: true
+        default: 'World'
+
+jobs:
+  concat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Run concat script
+        run: |
+          python3 scripts/concat.py "${{ github.event.inputs.string1 }}" "${{ github.event.inputs.string2 }}"
