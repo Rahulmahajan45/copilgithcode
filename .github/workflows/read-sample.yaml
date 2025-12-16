@@ -1,0 +1,28 @@
+name: Read sample1 and print columns
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+
+jobs:
+  read-and-print:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read scripts/sample1.txt and print columns
+        shell: bash
+        run: |
+          FILE="scripts/sample1.txt"
+          if [ ! -f "$FILE" ]; then
+            echo "File $FILE not found"
+            exit 1
+          fi
+
+          echo "Reading $FILE"
+          # Use awk with field-separator that accepts comma or whitespace.
+          # Print only lines that have at least two fields.
+          awk -F'[,[:space:]]+' 'NF>=2 { print "Name "$1" , salary "$2 }' "$FILE"
