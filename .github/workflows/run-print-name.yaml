@@ -1,0 +1,22 @@
+# GitHub Actions workflow to call scripts/print_names.sh
+name: Run print_names script
+on:
+  push:
+    paths:
+      - 'scripts/**'
+  workflow_dispatch:
+
+jobs:
+  run-print:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure script is executable
+        run: chmod +x scripts/print_names.sh
+
+      - name: Run the script
+        run: ./scripts/print_names.sh
+        # If your script filename differs (e.g. print_name.sh) or you want to pass a file:
+        # run: ./scripts/print_name.sh scripts/sample.txt
